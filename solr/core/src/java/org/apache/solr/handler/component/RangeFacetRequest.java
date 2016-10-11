@@ -165,7 +165,7 @@ public class RangeFacetRequest extends FacetComponent.FacetBase {
         default:
           throw new SolrException
               (SolrException.ErrorCode.BAD_REQUEST,
-                  "Unable to range facet on tried field of unexpected type:" + this.facetOn);
+                  "Unable to range facet on Trie field of unexpected type:" + this.facetOn);
       }
     } else if (ft instanceof DateRangeField) {
       calc = new DateRangeEndpointCalculator(this, null);
@@ -190,7 +190,7 @@ public class RangeFacetRequest extends FacetComponent.FacetBase {
         default:
           throw new SolrException
               (SolrException.ErrorCode.BAD_REQUEST,
-                  "Unable to range facet on tried field of unexpected type:" + this.facetOn);
+                  "Unable to range facet on Point field of unexpected type:" + this.facetOn);
       }
     } else {
       throw new SolrException
