@@ -33,6 +33,7 @@ import org.apache.lucene.util.LuceneTestCase;
 import org.apache.solr.JSONTestUtil;
 import org.apache.solr.SolrTestCaseHS;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.SolrTestCaseJ4.SuppressPointFields;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.request.macro.MacroExpander;
 import org.junit.AfterClass;
@@ -40,6 +41,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 @LuceneTestCase.SuppressCodecs({"Lucene3x","Lucene40","Lucene41","Lucene42","Lucene45","Appending"})
+@SuppressPointFields
 public class TestJsonFacets extends SolrTestCaseHS {
 
   private static SolrInstances servers;  // for distributed testing

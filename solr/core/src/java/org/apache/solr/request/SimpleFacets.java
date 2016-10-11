@@ -410,6 +410,10 @@ public class SimpleFacets {
     
     NamedList<Integer> counts;
     SchemaField sf = searcher.getSchema().getField(field);
+    if (sf.getType().isPointField() && !sf.hasDocValues()) {
+      throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, 
+          "Can't facet on a PointField without docValues");
+    }
     FieldType ft = sf.getType();
 
     // determine what type of faceting method to use
@@ -1074,6 +1078,9 @@ public class SimpleFacets {
       SchemaField schemaField = searcher.getCore().getLatestSchema().getField(parsed.facetValue);
       if (parsed.params.getBool(GroupParams.GROUP_FACET, false)) {
         throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "Interval Faceting can't be used with " + GroupParams.GROUP_FACET);
+      }
+      if (schemaField.getType().isPointField() && !schemaField.hasDocValues()) {
+        throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "Can't use interval faceting on a PointField without docValues");
       }
       
       SimpleOrderedMap<Integer> fieldResults = new SimpleOrderedMap<Integer>();

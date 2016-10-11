@@ -163,7 +163,7 @@ public abstract class SolrTestCaseJ4 extends LuceneTestCase {
   private static String coreName = DEFAULT_TEST_CORENAME;
 
   public static int DEFAULT_CONNECTION_TIMEOUT = 60000;  // default socket connection timeout in ms
-
+  
   protected void writeCoreProperties(Path coreDirectory, String corename) throws IOException {
     Properties props = new Properties();
     props.setProperty("name", corename);
@@ -205,6 +205,19 @@ public abstract class SolrTestCaseJ4 extends LuceneTestCase {
   public @interface SuppressObjectReleaseTracker {
     /** Point to JIRA entry. */
     public String bugUrl();
+  }
+  
+  /**
+   * Annotation for test classes that want to disable PointFields.
+   * PointFields will otherwise randomly used by some schemas.
+   */
+  @Documented
+  @Inherited
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.TYPE)
+  public @interface SuppressPointFields {
+    /** Point to JIRA entry. */
+    public String bugUrl() default "None";
   }
   
   // these are meant to be accessed sequentially, but are volatile just to ensure any test
@@ -411,10 +424,12 @@ public abstract class SolrTestCaseJ4 extends LuceneTestCase {
     lrf = h.getRequestFactory("standard", 0, 20, CommonParams.VERSION, "2.2");
   }
   
-  /** sets system properties based on 
+  /** 
+   * Sets system properties to allow generation of random configurations of
+   * solrconfig.xml and schema.xml. 
+   * Sets properties used on  
    * {@link #newIndexWriterConfig(org.apache.lucene.analysis.Analyzer)}
-   * 
-   * configs can use these system properties to vary the indexwriter settings
+   *  and base schema.xml (Point Fields)
    */
   public static void newRandomConfig() {
     IndexWriterConfig iwc = newIndexWriterConfig(new MockAnalyzer(random()));
@@ -430,6 +445,14 @@ public abstract class SolrTestCaseJ4 extends LuceneTestCase {
       mergeSchedulerClass = "org.apache.lucene.index.ConcurrentMergeScheduler";
     }
     System.setProperty("solr.tests.mergeScheduler", mergeSchedulerClass);
+    if (RandomizedContext.current().getTargetClass().isAnnotationPresent(SuppressPointFields.class) || random().nextBoolean()) {
+      System.setProperty("solr.tests.intClass", "int");
+      System.setProperty("solr.tests.doubleClass", "double");
+    } else {
+      log.info("Using PointFields"); //nocommit remove log
+      System.setProperty("solr.tests.intClass", "pint");
+      System.setProperty("solr.tests.doubleClass", "pdouble");
+    }
   }
 
   public static Throwable getWrappedException(Throwable e) {
@@ -935,7 +958,7 @@ public abstract class SolrTestCaseJ4 extends LuceneTestCase {
 
   public static void assertQEx(String message, SolrQueryRequest req, SolrException.ErrorCode code ) {
     try {
-      ignoreException(".");
+//      ignoreException(".");
       h.query(req);
       fail( message );
     } catch (SolrException e) {
