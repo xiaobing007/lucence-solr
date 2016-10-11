@@ -179,7 +179,9 @@ public abstract class PointField extends PrimitiveFieldType {
 
   @Override
   public String storedToIndexed(IndexableField f) {
-    return storedToIndexedByteRef(f).utf8ToString();
+    //nocommit: Is this OK? "utf8ToString" can sometimes fail
+//    return storedToIndexedByteRef(f).utf8ToString();
+    throw new UnsupportedOperationException("Review this method implementation");
   }
   
   @Override

@@ -26,6 +26,7 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.schema.DoublePointField;
 import org.apache.solr.schema.IntPointField;
 import org.apache.solr.schema.PointField;
+import org.apache.solr.schema.SchemaField;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -85,9 +86,15 @@ public class TestPointFields extends SolrTestCaseJ4 {
   @Test
   public void testIntPointFieldReturn() throws Exception {
     testPointFieldReturn("number_p_i", "int", new String[]{"0", "1", "2", "3", "43", "52", "60", "74", "80", "99"});
+    clearIndex();
+    assertU(commit());
+    testPointFieldReturn("number_p_i_dv_ns", "int", new String[]{"0", "1", "2", "3", "43", "52", "60", "74", "80", "99"});
   }
   
   private void testPointFieldReturn(String field, String type, String[] values) throws Exception {
+    SchemaField sf = h.getCore().getLatestSchema().getField(field);
+    assert sf.stored() || (sf.hasDocValues() && sf.useDocValuesAsStored()): 
+      "Unexpected field definition for " + field; 
     for (int i=0; i < values.length; i++) {
       assertU(adoc("id", String.valueOf(i), field, values[i]));
     }
@@ -720,6 +727,9 @@ public class TestPointFields extends SolrTestCaseJ4 {
   @Test
   public void testDoublePointFieldReturn() throws Exception {
     testPointFieldReturn("number_p_d", "double", new String[]{"0.0", "1.2", "2.5", "3.02", "0.43", "5.2", "6.01", "74.0", "80.0", "9.9"});
+    clearIndex();
+    assertU(commit());
+    testPointFieldReturn("number_p_d_dv_ns", "double", new String[]{"0.0", "1.2", "2.5", "3.02", "0.43", "5.2", "6.01", "74.0", "80.0", "9.9"});
     clearIndex();
     assertU(commit());
     String[] arr = new String[atLeast(10)];
