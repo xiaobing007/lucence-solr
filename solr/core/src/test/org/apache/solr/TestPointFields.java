@@ -32,6 +32,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Tests for PointField functionality
  *
@@ -643,6 +645,39 @@ public class TestPointFields extends SolrTestCaseJ4 {
     testPointMultiValuedFunctionQuery("number_p_i_mv", "number_p_i_mv_dv", "int", getSequentialStringArrayWithInts(20));
   }
   
+  @Test
+  public void testIntPointFieldsAtomicUpdates() throws Exception {
+    if (!Boolean.getBoolean("enable.update.log")) {
+      return;
+    }
+    testIntPointFieldsAtomicUpdates("number_p_i", "int");
+    testIntPointFieldsAtomicUpdates("number_p_i_dv", "int");
+    testIntPointFieldsAtomicUpdates("number_p_i_dv_ns", "int");
+  }
+  
+  private void testIntPointFieldsAtomicUpdates(String field, String type) throws Exception {
+    assertU(adoc(sdoc("id", "1", field, "1")));
+    assertU(commit());
+
+    assertU(adoc(sdoc("id", "1", field, ImmutableMap.of("inc", 1))));
+    assertU(commit());
+
+    assertQ(req("q", "id:1"),
+        "//result/doc[1]/" + type + "[@name='" + field + "'][.='2']");
+    
+    assertU(adoc(sdoc("id", "1", field, ImmutableMap.of("inc", -1))));
+    assertU(commit());
+    
+    assertQ(req("q", "id:1"),
+        "//result/doc[1]/" + type + "[@name='" + field + "'][.='1']");
+    
+    assertU(adoc(sdoc("id", "1", field, ImmutableMap.of("set", 3))));
+    assertU(commit());
+    
+    assertQ(req("q", "id:1"),
+        "//result/doc[1]/" + type + "[@name='" + field + "'][.='3']");
+  }
+  
 
   @Test
   public void testDoublePointFieldExactQuery() throws Exception {
@@ -1070,6 +1105,50 @@ public class TestPointFields extends SolrTestCaseJ4 {
   public void testDoublePointMultiValuedFunctionQuery() throws Exception {
 //    testPointMultiValuedFunctionQuery("number_p_d_mv", "number_p_d_mv_dv", "double", getSequentialStringArrayWithDoubles(20));
     testPointMultiValuedFunctionQuery("number_p_d_mv", "number_p_d_mv_dv", "double", getRandomStringArrayWithFloats(20, true));
+  }
+  
+  @Test
+  public void testDoublePointFieldsAtomicUpdates() throws Exception {
+    if (!Boolean.getBoolean("enable.update.log")) {
+      return;
+    }
+    testDoublePointFieldsAtomicUpdates("number_p_d");
+    testDoublePointFieldsAtomicUpdates("number_p_d_dv");
+    testDoublePointFieldsAtomicUpdates("number_p_d_dv_ns");
+  }
+  
+  private void testDoublePointFieldsAtomicUpdates(String field) throws Exception {
+    assertU(adoc(sdoc("id", "1", field, "1.1234")));
+    assertU(commit());
+
+    assertU(adoc(sdoc("id", "1", field, ImmutableMap.of("inc", 1.1D))));
+    assertU(commit());
+
+    assertQ(req("q", "id:1"),
+        "//result/doc[1]/double[@name='" + field + "'][.='2.2234']");
+    
+    assertU(adoc(sdoc("id", "1", field, ImmutableMap.of("inc", -1.1D))));
+    assertU(commit());
+    
+    // TODO: can this test be better?
+    assertQ(req("q", "id:1"),
+        "//result/doc[1]/double[@name='" + field + "'][.>'1.1233']",
+        "//result/doc[1]/double[@name='" + field + "'][.<'1.1235']");
+    
+    assertU(adoc(sdoc("id", "1", field, ImmutableMap.of("set", 3.123D))));
+    assertU(commit());
+    
+    assertQ(req("q", "id:1"),
+        "//result/doc[1]/double[@name='" + field + "'][.='3.123']");
+    
+    assertU(adoc(sdoc("id", "1", field, ImmutableMap.of("set", 3.14D))));
+    assertU(commit());
+    assertU(adoc(sdoc("id", "1", field, ImmutableMap.of("inc", 1D))));
+    assertU(commit());
+    assertQ(req("q", "id:1"),
+        "//result/doc[1]/double[@name='" + field + "'][.>'4.13']",
+        "//result/doc[1]/double[@name='" + field + "'][.<'4.15']");
+    
   }
   
 }

@@ -41,23 +41,71 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DocumentStoredFieldVisitor;
 import org.apache.lucene.document.LazyDocument;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.BinaryDocValues;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.DocValuesType;
+import org.apache.lucene.index.ExitableDirectoryReader;
+import org.apache.lucene.index.FieldInfo;
+import org.apache.lucene.index.FieldInfos;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.LeafReader;
+import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.MultiPostingsEnum;
 import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.ReaderUtil;
+import org.apache.lucene.index.SortedDocValues;
+import org.apache.lucene.index.SortedSetDocValues;
+import org.apache.lucene.index.StoredFieldVisitor;
 import org.apache.lucene.index.StoredFieldVisitor.Status;
-import org.apache.lucene.search.*;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermContext;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.ConstantScoreQuery;
+import org.apache.lucene.search.DocIdSet;
+import org.apache.lucene.search.DocIdSetIterator;
+import org.apache.lucene.search.EarlyTerminatingSortingCollector;
+import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.FieldDoc;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.LeafCollector;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.MultiCollector;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.SimpleCollector;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TermStatistics;
+import org.apache.lucene.search.TimeLimitingCollector;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.TopDocsCollector;
+import org.apache.lucene.search.TopFieldCollector;
+import org.apache.lucene.search.TopFieldDocs;
+import org.apache.lucene.search.TopScoreDocCollector;
+import org.apache.lucene.search.TotalHitCountCollector;
+import org.apache.lucene.search.Weight;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.FixedBitSet;
 import org.apache.solr.common.SolrDocumentBase;
-import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.SolrException;
+import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
-import org.apache.solr.core.DirectoryFactory.DirContext;
 import org.apache.solr.core.DirectoryFactory;
+import org.apache.solr.core.DirectoryFactory.DirContext;
 import org.apache.solr.core.SolrConfig;
 import org.apache.solr.core.SolrCore;
 import org.apache.solr.core.SolrInfoMBean;
@@ -69,6 +117,7 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.schema.BoolField;
 import org.apache.solr.schema.EnumField;
 import org.apache.solr.schema.IndexSchema;
+import org.apache.solr.schema.PointField;
 import org.apache.solr.schema.SchemaField;
 import org.apache.solr.schema.TrieDateField;
 import org.apache.solr.schema.TrieDoubleField;
@@ -801,16 +850,36 @@ public class SolrIndexSearcher extends IndexSearcher implements Closeable, SolrI
               continue;
             }
             Object newVal = val;
-            if (schemaField.getType() instanceof TrieIntField) {
-              newVal = val.intValue();
-            } else if (schemaField.getType() instanceof TrieFloatField) {
-              newVal = Float.intBitsToFloat(val.intValue());
-            } else if (schemaField.getType() instanceof TrieDoubleField) {
-              newVal = Double.longBitsToDouble(val);
-            } else if (schemaField.getType() instanceof TrieDateField) {
-              newVal = new Date(val);
-            } else if (schemaField.getType() instanceof EnumField) {
-              newVal = ((EnumField) schemaField.getType()).intValueToStringValue(val.intValue());
+            if (schemaField.getType().isPointField()) {
+              PointField.PointTypes type = ((PointField)schemaField.getType()).getType(); 
+              switch (type) {
+                case INTEGER:
+                  newVal = val.intValue();
+                  break;
+                case FLOAT:
+                  newVal = Float.intBitsToFloat(val.intValue());
+                  break;
+                case DOUBLE:
+                  newVal = Double.longBitsToDouble(val);
+                  break;
+                case DATE:
+                  newVal = new Date(val);
+                  break;
+                default:
+                  throw new AssertionError("Unexpected PointType: " + type);
+              }
+            } else {
+              if (schemaField.getType() instanceof TrieIntField) {
+                newVal = val.intValue();
+              } else if (schemaField.getType() instanceof TrieFloatField) {
+                newVal = Float.intBitsToFloat(val.intValue());
+              } else if (schemaField.getType() instanceof TrieDoubleField) {
+                newVal = Double.longBitsToDouble(val);
+              } else if (schemaField.getType() instanceof TrieDateField) {
+                newVal = new Date(val);
+              } else if (schemaField.getType() instanceof EnumField) {
+                newVal = ((EnumField) schemaField.getType()).intValueToStringValue(val.intValue());
+              }
             }
             doc.addField(fieldName, newVal);
             break;
