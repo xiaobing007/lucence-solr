@@ -53,6 +53,9 @@ New Features
   in postings for fast wildcard (MultiTermQuery) highlighting.
   (David Smiley, Timothy Rodriguez)
 
+* LUCENE-7490: SimpleQueryParser now parses '*' to MatchAllDocsQuery
+  (Lee Hinman via Mike McCandless)
+
 Bug Fixes
 
 * LUCENE-7472: MultiFieldQueryParser.getFieldQuery() drops queries that are
@@ -69,6 +72,14 @@ Bug Fixes
 
 * LUCENE-7476: JapaneseNumberFilter should not invoke incrementToken
   on its input after it's exhausted (Andy Hind via Mike McCandless)
+
+* LUCENE-7486: DisjunctionMaxQuery does not work correctly with queries that
+  return negative scores.  (Ivan Provalov, Uwe Schindler, Adrien Grand)
+
+* LUCENE-7491: Suddenly turning on dimensional points for some fields
+  that already exist in an index but didn't previously index
+  dimensional points could cause unexpected merge exceptions (Hans
+  Lund, Mike McCandless)
 
 Improvements
 
