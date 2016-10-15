@@ -17,30 +17,18 @@
 
 package org.apache.solr.schema;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.Map;
 
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.SortedDocValues;
-import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.legacy.LegacyNumericType;
-import org.apache.lucene.queries.function.FunctionValues;
 import org.apache.lucene.queries.function.ValueSource;
-import org.apache.lucene.queries.function.docvalues.DoubleDocValues;
 import org.apache.lucene.queries.function.valuesource.DoubleFieldSource;
-import org.apache.lucene.queries.function.valuesource.SortedSetFieldSource;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedSetSelector;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.BytesRefBuilder;
-import org.apache.lucene.util.mutable.MutableValue;
-import org.apache.lucene.util.mutable.MutableValueDouble;
 import org.apache.solr.search.QParser;
 import org.apache.solr.uninverting.UninvertingReader.Type;
 import org.slf4j.Logger;
@@ -86,74 +74,6 @@ public class DoublePointField extends PointField implements DoubleValueFieldType
       }
     }
     return DoublePoint.newRangeQuery(field.getName(), actualMin, actualMax);
-  }
-
-  @Override
-  protected ValueSource getSingleValueSource(SortedSetSelector.Type choice, SchemaField f) {
-    return new SortedSetFieldSource(f.getName(), choice) {
-      @Override
-      public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-        SortedSetFieldSource thisAsSortedSetFieldSource = this; // needed for nested anon class ref
-
-        SortedSetDocValues sortedSet = DocValues.getSortedSet(readerContext.reader(), field);
-        SortedDocValues view = SortedSetSelector.wrap(sortedSet, selector);
-
-        return new DoubleDocValues(thisAsSortedSetFieldSource) {
-          private int lastDocID;
-
-          private boolean setDoc(int docID) throws IOException {
-            if (docID < lastDocID) {
-              throw new IllegalArgumentException("docs out of order: lastDocID=" + lastDocID + " docID=" + docID);
-            }
-            if (docID > view.docID()) {
-              return docID == view.advance(docID);
-            } else {
-              return docID == view.docID();
-            }
-          }
-          
-          @Override
-          public double doubleVal(int doc) throws IOException {
-            if (setDoc(doc)) {
-              BytesRef bytes = view.binaryValue();
-              assert bytes.length > 0;
-              return DoublePoint.decodeDimension(bytes.bytes, bytes.offset);
-            } else {
-              return 0D;
-            }
-          }
-
-          @Override
-          public boolean exists(int doc) throws IOException {
-            return setDoc(doc);
-          }
-
-          @Override
-          public ValueFiller getValueFiller() {
-            return new ValueFiller() {
-              private final MutableValueDouble mval = new MutableValueDouble();
-              
-              @Override
-              public MutableValue getValue() {
-                return mval;
-              }
-              
-              @Override
-              public void fillValue(int doc) throws IOException {
-                if (setDoc(doc)) {
-                  BytesRef bytes = view.binaryValue();
-                  mval.exists = true;
-                  mval.value = DoublePoint.decodeDimension(bytes.bytes, bytes.offset);
-                } else {
-                  mval.exists = false;
-                  mval.value = 0;
-                }
-              }
-            };
-          }
-        };
-      }
-    };
   }
 
   @Override
@@ -208,7 +128,8 @@ public class DoublePointField extends PointField implements DoubleValueFieldType
   @Override
   public Type getUninversionType(SchemaField sf) {
     if (sf.multiValued()) {
-      return Type.SORTED_SET_DOUBLE;
+      throw new UnsupportedOperationException("MultiValued Point fields with DocValues is not currently supported");
+//      return Type.SORTED_DOUBLE;
     } else {
       return Type.DOUBLE_POINT;
     }

@@ -159,6 +159,13 @@ public abstract class SolrTestCaseJ4 extends LuceneTestCase {
   public static final String SYSTEM_PROPERTY_SOLR_TESTS_USEMERGEPOLICYFACTORY = "solr.tests.useMergePolicyFactory";
   @Deprecated // remove solr.tests.useMergePolicy use with SOLR-8668
   public static final String SYSTEM_PROPERTY_SOLR_TESTS_USEMERGEPOLICY = "solr.tests.useMergePolicy";
+  
+  /**
+   * The system property {@code "solr.tests.preferPointFields"} can be used to make tests use PointFields when possible. 
+   * PointFields will only be used if the schema used by the tests uses "${solr.tests.TYPEClass}" when defining fields. 
+   * If this environment variable is not set, those tests will use PointFields 50% of the times and TrieFields the rest.
+   */
+  public static final boolean PREFER_POINT_FIELDS = Boolean.getBoolean("solr.tests.preferPointFields");
 
   private static String coreName = DEFAULT_TEST_CORENAME;
 
@@ -445,11 +452,13 @@ public abstract class SolrTestCaseJ4 extends LuceneTestCase {
       mergeSchedulerClass = "org.apache.lucene.index.ConcurrentMergeScheduler";
     }
     System.setProperty("solr.tests.mergeScheduler", mergeSchedulerClass);
-    if (RandomizedContext.current().getTargetClass().isAnnotationPresent(SuppressPointFields.class) || random().nextBoolean()) {
+    if (RandomizedContext.current().getTargetClass().isAnnotationPresent(SuppressPointFields.class)
+        || (!PREFER_POINT_FIELDS && random().nextBoolean())) {
+      log.info("Using TrieFields");
       System.setProperty("solr.tests.intClass", "int");
       System.setProperty("solr.tests.doubleClass", "double");
     } else {
-      log.info("Using PointFields"); //nocommit remove log
+      log.info("Using PointFields");
       System.setProperty("solr.tests.intClass", "pint");
       System.setProperty("solr.tests.doubleClass", "pdouble");
     }

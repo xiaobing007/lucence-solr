@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.lucene.document.NumericDocValuesField;
-import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.queries.function.ValueSource;
@@ -105,10 +104,12 @@ public abstract class PointField extends PrimitiveFieldType {
    * field is not supported for this field type
    *
    * @param choice the selector Type to use, will never be null
-   * @param field the field to use, garunteed to be multivalued.
+   * @param field the field to use, guaranteed to be multivalued.
    * @see #getSingleValueSource(MultiValueSelector,SchemaField,QParser) 
    */
-  protected abstract ValueSource getSingleValueSource(SortedSetSelector.Type choice, SchemaField field);
+  protected ValueSource getSingleValueSource(SortedSetSelector.Type choice, SchemaField field) {
+    throw new UnsupportedOperationException("MultiValued Point fields with DocValues is not currently supported");
+  }
 
   @Override
   public boolean isTokenized() {
@@ -126,23 +127,6 @@ public abstract class PointField extends PrimitiveFieldType {
   public PointTypes getType() {
     return type;
   }
-
-//  @Override
-//  public FieldType.LegacyNumericType getNumericType() {
-//    switch (type) {
-//      case INTEGER:
-//        return FieldType.LegacyNumericType.INT;
-//      case LONG:
-//      case DATE:
-//        return FieldType.LegacyNumericType.LONG;
-//      case FLOAT:
-//        return FieldType.LegacyNumericType.FLOAT;
-//      case DOUBLE:
-//        return FieldType.LegacyNumericType.DOUBLE;
-//      default:
-//        throw new AssertionError();
-//    }
-//  }
   
   @Override
   public Query getFieldQuery(QParser parser, SchemaField field, String externalVal) {
@@ -227,7 +211,7 @@ public abstract class PointField extends PrimitiveFieldType {
     
     if (sf.hasDocValues()) {
       if (sf.multiValued()) {
-        fields.add(new SortedSetDocValuesField(sf.getName(), storedToIndexedByteRef(field)));
+        throw new UnsupportedOperationException("MultiValued Point fields with DocValues is not currently supported. Field: '" + sf.getName() + "'");
       } else {
         final long bits;
         if (field.numericValue() instanceof Integer || field.numericValue() instanceof Long) {

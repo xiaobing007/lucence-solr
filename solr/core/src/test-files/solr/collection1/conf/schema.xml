@@ -675,10 +675,10 @@
   <dynamicField name="*_sev_enum" type="severityType" indexed="true" stored="true" docValues="true" multiValued="true"/>
 
   <!-- With DocValues=true -->
-  <dynamicField name="*_i_dv" type="${solr.tests.intClass:pint}" indexed="true" stored="true" docValues="true"/>
+  <dynamicField name="*_i_dv" type="int" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_l_dv" type="long" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_f_dv" type="float" indexed="true" stored="true" docValues="true"/>
-  <dynamicField name="*_d_dv" type="${solr.tests.doubleClass:pdouble}" indexed="true" stored="true" docValues="true"/>
+  <dynamicField name="*_d_dv" type="double" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_dt_dv" type="date" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_f1_dv" type="float" indexed="true" stored="true" docValues="true" multiValued="false"/>
 
@@ -689,7 +689,7 @@
                 useDocValuesAsStored="true"/>
   <dynamicField name="*_s_dvo" multiValued="false" type="string" docValues="true" indexed="true" stored="false"
                 useDocValuesAsStored="true"/>
-  <dynamicField name="*_ii_dvo" multiValued="true" type="${solr.tests.intClass:pint}" docValues="true" indexed="true" stored="false"
+  <dynamicField name="*_ii_dvo" multiValued="true" type="int" docValues="true" indexed="true" stored="false"
                 useDocValuesAsStored="true"/>
   <dynamicField name="*_dd_dvo" multiValued="true" type="double" docValues="true" indexed="true" stored="false"
                 useDocValuesAsStored="true"/>

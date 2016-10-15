@@ -251,6 +251,7 @@
     <propertyref name="lucene.javadoc.url"/><!-- for Solr -->
     <propertyref name="tests.totals.tmpfile" />
     <propertyref name="git-autoclean.disabled"/>
+    <propertyref name="solr.tests.preferPointFields"/>
   </propertyset>
 
   <patternset id="lucene.local.src.package.patterns"

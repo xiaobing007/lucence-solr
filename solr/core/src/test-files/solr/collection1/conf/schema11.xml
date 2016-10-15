@@ -325,7 +325,7 @@ valued. -->
 
    <field name="cat" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="cat_docValues" type="string"  indexed="true" stored="true" docValues="true" multiValued="true" />
-   <field name="cat_intDocValues" type="${solr.tests.intClass:pint}"  indexed="true" stored="true" docValues="true" multiValued="true" />
+   <field name="cat_intDocValues" type="int"  indexed="true" stored="true" docValues="true" multiValued="true" />
    <field name="cat_floatDocValues" type="float"  indexed="true" stored="true" docValues="true" multiValued="true" />
    <field name="cat_length" type="text_length" indexed="true" stored="true" multiValued="true"/>
 

@@ -17,30 +17,18 @@
 
 package org.apache.solr.schema;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.Map;
 
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.SortedDocValues;
-import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.legacy.LegacyNumericType;
-import org.apache.lucene.queries.function.FunctionValues;
 import org.apache.lucene.queries.function.ValueSource;
-import org.apache.lucene.queries.function.docvalues.IntDocValues;
 import org.apache.lucene.queries.function.valuesource.IntFieldSource;
-import org.apache.lucene.queries.function.valuesource.SortedSetFieldSource;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedSetSelector;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.BytesRefBuilder;
-import org.apache.lucene.util.mutable.MutableValue;
-import org.apache.lucene.util.mutable.MutableValueInt;
 import org.apache.solr.search.QParser;
 import org.apache.solr.uninverting.UninvertingReader.Type;
 import org.slf4j.Logger;
@@ -104,74 +92,6 @@ public class IntPointField extends PointField implements IntValueFieldType {
   }
 
   @Override
-  protected ValueSource getSingleValueSource(SortedSetSelector.Type choice, SchemaField f) {
-    return new SortedSetFieldSource(f.getName(), choice) {
-      @Override
-      public FunctionValues getValues(Map context, LeafReaderContext readerContext) throws IOException {
-        SortedSetFieldSource thisAsSortedSetFieldSource = this; // needed for nested anon class ref
-
-        SortedSetDocValues sortedSet = DocValues.getSortedSet(readerContext.reader(), field);
-        SortedDocValues view = SortedSetSelector.wrap(sortedSet, selector);
-
-        return new IntDocValues(thisAsSortedSetFieldSource) {
-          private int lastDocID;
-
-          private boolean setDoc(int docID) throws IOException {
-            if (docID < lastDocID) {
-              throw new IllegalArgumentException("docs out of order: lastDocID=" + lastDocID + " docID=" + docID);
-            }
-            if (docID > view.docID()) {
-              return docID == view.advance(docID);
-            } else {
-              return docID == view.docID();
-            }
-          }
-          
-          @Override
-          public int intVal(int doc) throws IOException {
-            if (setDoc(doc)) {
-              BytesRef bytes = view.binaryValue();
-              assert bytes.length > 0;
-              return IntPoint.decodeDimension(bytes.bytes, bytes.offset);
-            } else {
-              return 0;
-            }
-          }
-
-          @Override
-          public boolean exists(int doc) throws IOException {
-            return setDoc(doc);
-          }
-
-          @Override
-          public ValueFiller getValueFiller() {
-            return new ValueFiller() {
-              private final MutableValueInt mval = new MutableValueInt();
-              
-              @Override
-              public MutableValue getValue() {
-                return mval;
-              }
-              
-              @Override
-              public void fillValue(int doc) throws IOException {
-                if (setDoc(doc)) {
-                  BytesRef bytes = view.binaryValue();
-                  mval.exists = true;
-                  mval.value = IntPoint.decodeDimension(bytes.bytes, bytes.offset);
-                } else {
-                  mval.exists = false;
-                  mval.value = 0;
-                }
-              }
-            };
-          }
-        };
-      }
-    };
-  }
-
-  @Override
   public Object toObject(SchemaField sf, BytesRef term) {
     return IntPoint.decodeDimension(term.bytes, term.offset);
   }
@@ -223,7 +143,8 @@ public class IntPointField extends PointField implements IntValueFieldType {
   @Override
   public Type getUninversionType(SchemaField sf) {
     if (sf.multiValued()) {
-      return Type.SORTED_SET_INTEGER;
+      throw new UnsupportedOperationException("MultiValued Point fields with DocValues is not currently supported");
+//      return Type.SORTED_INTEGER;
     } else {
       return Type.INTEGER_POINT;
     }
