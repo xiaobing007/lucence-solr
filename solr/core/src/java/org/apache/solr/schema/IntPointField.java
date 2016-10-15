@@ -95,6 +95,16 @@ public class IntPointField extends PointField implements IntValueFieldType {
   public Object toObject(SchemaField sf, BytesRef term) {
     return IntPoint.decodeDimension(term.bytes, term.offset);
   }
+  
+  @Override
+  public Object toObject(IndexableField f) {
+    final Number val = f.numericValue();
+    if (val != null) {
+      return val;
+    } else {
+      throw new AssertionError("Unexpected state. Field: '" + f + "'");
+    }
+  }
 
   @Override
   protected Query getExactQuery(QParser parser, SchemaField field, String externalVal) {

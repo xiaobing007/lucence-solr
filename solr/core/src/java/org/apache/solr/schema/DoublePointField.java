@@ -21,6 +21,7 @@ import java.lang.invoke.MethodHandles;
 
 import org.apache.lucene.document.DoublePoint;
 import org.apache.lucene.document.StoredField;
+import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.legacy.LegacyNumericType;
 import org.apache.lucene.queries.function.ValueSource;
@@ -79,6 +80,20 @@ public class DoublePointField extends PointField implements DoubleValueFieldType
   @Override
   public Object toObject(SchemaField sf, BytesRef term) {
     return DoublePoint.decodeDimension(term.bytes, term.offset);
+  }
+  
+  @Override
+  public Object toObject(IndexableField f) {
+    final Number val = f.numericValue();
+    if (val != null) {
+      if (f.fieldType().stored() == false && f.fieldType().docValuesType() == DocValuesType.NUMERIC) {
+        return Double.longBitsToDouble(val.longValue());
+      } else {
+        return val;
+      }
+    } else {
+      throw new AssertionError("Unexpected state. Field: '" + f + "'");
+    }
   }
 
   @Override
@@ -143,6 +158,7 @@ public class DoublePointField extends PointField implements DoubleValueFieldType
 
   @Override
   public LegacyNumericType getNumericType() {
+    // TODO: refactor this to not use LegacyNumericType
     return LegacyNumericType.DOUBLE;
   }
 

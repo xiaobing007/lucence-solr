@@ -158,7 +158,7 @@ public abstract class PointField extends PrimitiveFieldType {
   
   @Override
   public void write(TextResponseWriter writer, String name, IndexableField f) throws IOException {
-    writer.writeVal(name, f.numericValue());
+    writer.writeVal(name, toObject(f));
   }
 
   @Override
