@@ -457,10 +457,12 @@ public abstract class SolrTestCaseJ4 extends LuceneTestCase {
       log.info("Using TrieFields");
       System.setProperty("solr.tests.intClass", "int");
       System.setProperty("solr.tests.doubleClass", "double");
+      System.setProperty("solr.tests.longClass", "long");
     } else {
       log.info("Using PointFields");
       System.setProperty("solr.tests.intClass", "pint");
       System.setProperty("solr.tests.doubleClass", "pdouble");
+      System.setProperty("solr.tests.longClass", "plong");
     }
   }
 

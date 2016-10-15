@@ -46,6 +46,7 @@
   <!-- Point Fields -->
   <fieldType name="pint" class="solr.IntPointField" docValues="true"/>
   <fieldType name="pdouble" class="solr.DoublePointField" docValues="true"/>
+  <fieldType name="plong" class="solr.LongPointField" docValues="true"/>
 
   <!-- Field type demonstrating an Analyzer failure -->
   <fieldType name="failtype1" class="solr.TextField">

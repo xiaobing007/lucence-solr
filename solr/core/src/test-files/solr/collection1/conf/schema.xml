@@ -45,8 +45,9 @@
   <fieldType name="tdouble" class="solr.TrieDoubleField" precisionStep="8" omitNorms="true" positionIncrementGap="0"/>
   
   <!-- Point Fields -->
-  <fieldType name="pint" class="solr.IntPointField"/>
-  <fieldType name="pdouble" class="solr.DoublePointField"/>
+  <fieldType name="pint" class="solr.IntPointField" docValues="true"/>
+  <fieldType name="pdouble" class="solr.DoublePointField" docValues="true"/>
+  <fieldType name="plong" class="solr.LongPointField" docValues="true"/>
 
   <!-- Field type demonstrating an Analyzer failure -->
   <fieldType name="failtype1" class="solr.TextField">
@@ -616,7 +617,7 @@
   <dynamicField name="*_f" type="float" indexed="true" stored="true"/>
   <dynamicField name="*_f1" type="float" indexed="true" stored="true" multiValued="false"/>
   <dynamicField name="*_d" type="double" indexed="true" stored="true"/>
-  <dynamicField name="*_d1" type="double" indexed="true" stored="true" multiValued="false"/>
+  <dynamicField name="*_d1" type="${solr.tests.doubleClass:pdouble}" indexed="true" stored="true" multiValued="false"/>
   <dynamicField name="*_dt" type="date" indexed="true" stored="true"/>
   <dynamicField name="*_dt1" type="date" indexed="true" stored="true" multiValued="false"/>
 
@@ -666,7 +667,7 @@
   <dynamicField name="*_mfacet" type="string" indexed="true" stored="false" multiValued="true"/>
 
   <!-- Type used to index the lat and lon components for the "location" FieldType -->
-  <dynamicField name="*_coordinate" type="tdouble" indexed="true" stored="false" omitNorms="true"/>
+  <dynamicField name="*_coordinate" type="${solr.tests.doubleClass:pdouble}" indexed="true" stored="false" omitNorms="true"/>
 
   <dynamicField name="*_path" type="path" indexed="true" stored="true" omitNorms="true" multiValued="true"/>
   <dynamicField name="*_ancestor" type="ancestor_path" indexed="true" stored="true" omitNorms="true"

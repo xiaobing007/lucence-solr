@@ -231,7 +231,7 @@
   <dynamicField name="*_idsS" type="int" indexed="true" stored="true" multiValued="true" docValues="true"/>
   <dynamicField name="*_sdS" type="string" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_sdsS" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
-  <dynamicField name="*_ldS" type="long" indexed="true" stored="true" docValues="true"/>
+  <dynamicField name="*_ldS" type="${solr.tests.longClass:plong}" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_ldsS" type="long" indexed="true" stored="true" multiValued="true" docValues="true"/>
   <dynamicField name="*_fdS" type="float" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_fdsS" type="float" indexed="true" stored="true" multiValued="true" docValues="true"/>
@@ -398,6 +398,7 @@
   <!-- Point Fields -->
   <fieldType name="pint" class="solr.IntPointField"/>
   <fieldType name="pdouble" class="solr.DoublePointField"/>
+  <fieldType name="plong" class="solr.LongPointField"/>
   
 
   <!-- The format for this date field is of the form 1995-12-31T23:59:59Z, and

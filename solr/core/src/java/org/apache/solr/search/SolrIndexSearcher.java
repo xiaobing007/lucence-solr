@@ -856,6 +856,9 @@ public class SolrIndexSearcher extends IndexSearcher implements Closeable, SolrI
                 case INTEGER:
                   newVal = val.intValue();
                   break;
+                case LONG:
+                  newVal = val.longValue();
+                  break;
                 case FLOAT:
                   newVal = Float.intBitsToFloat(val.intValue());
                   break;

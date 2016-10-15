@@ -60,14 +60,13 @@ public class TestPointFields extends SolrTestCaseJ4 {
   
   @Test
   public void testIntPointFieldExactQuery() throws Exception {
-    doTestIntPointFieldExactQuery("number_p_i");
-    doTestIntPointFieldExactQuery("number_p_i_mv");
-    doTestIntPointFieldExactQuery("number_p_i_ni_dv");
-//    doTestIntPointFieldExactQuery("number_p_i_ni_mv_dv");
-    
+    doTestIntPointFieldExactQuery("number_p_i", false);
+    doTestIntPointFieldExactQuery("number_p_i_mv", false);
+    doTestIntPointFieldExactQuery("number_p_i_ni_dv", false);
+//    doTestIntPointFieldExactQuery("number_p_i_ni_mv_dv", false);
   }
   
-  private void doTestIntPointFieldExactQuery(String field) throws Exception {
+  private void doTestIntPointFieldExactQuery(String field, boolean testLong) throws Exception {
     for (int i=0; i < 10; i++) {
       assertU(adoc("id", String.valueOf(i), field, String.valueOf(i+1)));
     }
@@ -80,16 +79,37 @@ public class TestPointFields extends SolrTestCaseJ4 {
     for (int i = 0; i < 10; i++) {
       assertQ(req("q", field + ":" + (i+1) + " OR " + field + ":" + ((i+1)%10 + 1)), "//*[@numFound='2']");
     }
+    
+    assertU(adoc("id", String.valueOf(Integer.MAX_VALUE), field, String.valueOf(Integer.MAX_VALUE)));
+    assertU(commit());
+    assertQ(req("q", field + ":"+Integer.MAX_VALUE, "fl", "id, " + field), 
+        "//*[@numFound='1']");
+    
+    if (testLong) {
+      for (long i = (long)Integer.MAX_VALUE; i < (long)Integer.MAX_VALUE + 10; i++) {
+        assertU(adoc("id", String.valueOf(i), field, String.valueOf(i+1)));
+      }
+      assertU(commit());
+      for (long i = (long)Integer.MAX_VALUE; i < (long)Integer.MAX_VALUE + 10; i++) {
+        assertQ(req("q", field + ":"+(i+1), "fl", "id, " + field), 
+            "//*[@numFound='1']");
+      }
+      assertU(adoc("id", String.valueOf(Long.MAX_VALUE), field, String.valueOf(Long.MAX_VALUE)));
+      assertU(commit());
+      assertQ(req("q", field + ":"+Long.MAX_VALUE, "fl", "id, " + field), 
+          "//*[@numFound='1']");
+    }
+    
     clearIndex();
     assertU(commit());
   }
   
   @Test
   public void testIntPointFieldReturn() throws Exception {
-    testPointFieldReturn("number_p_i", "int", new String[]{"0", "1", "2", "3", "43", "52", "60", "74", "80", "99"});
+    testPointFieldReturn("number_p_i", "int", new String[]{"0", "-1", "2", "3", "43", "52", "-60", "74", "80", "99"});
     clearIndex();
     assertU(commit());
-    testPointFieldReturn("number_p_i_dv_ns", "int", new String[]{"0", "1", "2", "3", "43", "52", "60", "74", "80", "99"});
+    testPointFieldReturn("number_p_i_dv_ns", "int", new String[]{"0", "-1", "2", "3", "43", "52", "-60", "74", "80", "99"});
   }
   
   private void testPointFieldReturn(String field, String type, String[] values) throws Exception {
@@ -110,56 +130,64 @@ public class TestPointFields extends SolrTestCaseJ4 {
   
   @Test
   public void testIntPointFieldRangeQuery() throws Exception {
-    String fieldName = "number_p_i";
+    doTestIntPointFieldRangeQuery("number_p_i", "int", false);
+  }
+  
+  private void doTestIntPointFieldRangeQuery(String fieldName, String type, boolean testLong) throws Exception {
     for (int i = 0; i < 10; i++) {
       assertU(adoc("id", String.valueOf(i), fieldName, String.valueOf(i)));
     }
     assertU(commit());
     assertQ(req("q", fieldName + ":[0 TO 3]", "fl", "id, " + fieldName), 
         "//*[@numFound='4']",
-        "//result/doc[1]/int[@name='" + fieldName + "'][.='0']",
-        "//result/doc[2]/int[@name='" + fieldName + "'][.='1']",
-        "//result/doc[3]/int[@name='" + fieldName + "'][.='2']",
-        "//result/doc[4]/int[@name='" + fieldName + "'][.='3']");
+        "//result/doc[1]/" + type + "[@name='" + fieldName + "'][.='0']",
+        "//result/doc[2]/" + type + "[@name='" + fieldName + "'][.='1']",
+        "//result/doc[3]/" + type + "[@name='" + fieldName + "'][.='2']",
+        "//result/doc[4]/" + type + "[@name='" + fieldName + "'][.='3']");
     
     assertQ(req("q", fieldName + ":{0 TO 3]", "fl", "id, " + fieldName), 
         "//*[@numFound='3']",
-        "//result/doc[1]/int[@name='" + fieldName + "'][.='1']",
-        "//result/doc[2]/int[@name='" + fieldName + "'][.='2']",
-        "//result/doc[3]/int[@name='" + fieldName + "'][.='3']");
+        "//result/doc[1]/" + type + "[@name='" + fieldName + "'][.='1']",
+        "//result/doc[2]/" + type + "[@name='" + fieldName + "'][.='2']",
+        "//result/doc[3]/" + type + "[@name='" + fieldName + "'][.='3']");
     
     assertQ(req("q", fieldName + ":[0 TO 3}", "fl", "id, " + fieldName), 
         "//*[@numFound='3']",
-        "//result/doc[1]/int[@name='" + fieldName + "'][.='0']",
-        "//result/doc[2]/int[@name='" + fieldName + "'][.='1']",
-        "//result/doc[3]/int[@name='" + fieldName + "'][.='2']");
+        "//result/doc[1]/" + type + "[@name='" + fieldName + "'][.='0']",
+        "//result/doc[2]/" + type + "[@name='" + fieldName + "'][.='1']",
+        "//result/doc[3]/" + type + "[@name='" + fieldName + "'][.='2']");
     
     assertQ(req("q", fieldName + ":{0 TO 3}", "fl", "id, " + fieldName), 
         "//*[@numFound='2']",
-        "//result/doc[1]/int[@name='" + fieldName + "'][.='1']",
-        "//result/doc[2]/int[@name='" + fieldName + "'][.='2']");
+        "//result/doc[1]/" + type + "[@name='" + fieldName + "'][.='1']",
+        "//result/doc[2]/" + type + "[@name='" + fieldName + "'][.='2']");
     
     assertQ(req("q", fieldName + ":{0 TO *}", "fl", "id, " + fieldName), 
         "//*[@numFound='9']",
-        "//result/doc[1]/int[@name='" + fieldName + "'][.='1']");
+        "//result/doc[1]/" + type + "[@name='" + fieldName + "'][.='1']");
     
     assertQ(req("q", fieldName + ":{* TO 3}", "fl", "id, " + fieldName), 
         "//*[@numFound='3']",
-        "//result/doc[1]/int[@name='" + fieldName + "'][.='0']");
+        "//result/doc[1]/" + type + "[@name='" + fieldName + "'][.='0']");
     
     assertQ(req("q", fieldName + ":[* TO 3}", "fl", "id, " + fieldName), 
         "//*[@numFound='3']",
-        "//result/doc[1]/int[@name='" + fieldName + "'][.='0']");
+        "//result/doc[1]/" + type + "[@name='" + fieldName + "'][.='0']");
     
     assertQ(req("q", fieldName + ":[* TO *}", "fl", "id, " + fieldName), 
         "//*[@numFound='10']",
-        "//result/doc[1]/int[@name='" + fieldName + "'][.='0']",
-        "//result/doc[10]/int[@name='" + fieldName + "'][.='9']");
+        "//result/doc[1]/" + type + "[@name='" + fieldName + "'][.='0']",
+        "//result/doc[10]/" + type + "[@name='" + fieldName + "'][.='9']");
     
     clearIndex();
     assertU(commit());
     
-    String[] arr = getRandomStringArrayWithInts(10, true);
+    String[] arr;
+    if (testLong) {
+      arr = getRandomStringArrayWithLongs(10, true);
+    } else {
+      arr = getRandomStringArrayWithInts(10, true);
+    }
     for (int i = 0; i < arr.length; i++) {
       assertU(adoc("id", String.valueOf(i), fieldName, arr[i]));
     }
@@ -215,18 +243,19 @@ public class TestPointFields extends SolrTestCaseJ4 {
   public void testIntPointFieldFacetField() throws Exception {
     testPointFieldFacetField("number_p_i", "number_p_i_dv", getSequentialStringArrayWithInts(10));
   }
-  
+
   @Test
   public void testIntPointFieldRangeFacet() throws Exception {
-    String docValuesField = "number_p_i_dv";
-    String nonDocValuesField = "number_p_i";
-    
+    doTestIntPointFieldRangeFacet("number_p_i_dv", "number_p_i");
+  }
+  
+  private void doTestIntPointFieldRangeFacet(String docValuesField, String nonDocValuesField) throws Exception {
     for (int i = 0; i < 10; i++) {
       assertU(adoc("id", String.valueOf(i), docValuesField, String.valueOf(i), nonDocValuesField, String.valueOf(i)));
     }
     assertU(commit());
     assertTrue(h.getCore().getLatestSchema().getField(docValuesField).hasDocValues());
-    assertTrue(h.getCore().getLatestSchema().getField(docValuesField).getType() instanceof IntPointField);
+    assertTrue(h.getCore().getLatestSchema().getField(docValuesField).getType() instanceof PointField);
     assertQ(req("q", "*:*", "facet", "true", "facet.range", docValuesField, "facet.range.start", "-10", "facet.range.end", "10", "facet.range.gap", "2"), 
         "//*[@numFound='10']",
         "//lst[@name='facet_counts']/lst[@name='facet_ranges']/lst[@name='" + docValuesField + "']/lst[@name='counts']/int[@name='0'][.='2']",
@@ -246,7 +275,7 @@ public class TestPointFields extends SolrTestCaseJ4 {
         "//lst[@name='facet_counts']/lst[@name='facet_ranges']/lst[@name='" + docValuesField + "']/lst[@name='counts']/int[@name='-10'][.='0']");
     
     assertFalse(h.getCore().getLatestSchema().getField(nonDocValuesField).hasDocValues());
-    assertTrue(h.getCore().getLatestSchema().getField(nonDocValuesField).getType() instanceof IntPointField);
+    assertTrue(h.getCore().getLatestSchema().getField(nonDocValuesField).getType() instanceof PointField);
     // Range Faceting with method = filter should work
     assertQ(req("q", "*:*", "facet", "true", "facet.range", nonDocValuesField, "facet.range.start", "-10", "facet.range.end", "10", "facet.range.gap", "2", "facet.range.method", "filter"), 
         "//*[@numFound='10']",
@@ -267,23 +296,25 @@ public class TestPointFields extends SolrTestCaseJ4 {
         "//lst[@name='facet_counts']/lst[@name='facet_ranges']/lst[@name='" + nonDocValuesField + "']/lst[@name='counts']/int[@name='8'][.='2']",
         "//lst[@name='facet_counts']/lst[@name='facet_ranges']/lst[@name='" + nonDocValuesField + "']/lst[@name='counts']/int[@name='-10'][.='0']");
   }
-
+  
   @Test
   public void testIntPointFunctionQuery() throws Exception {
-    String dvFieldName = "number_p_i_dv";
-    String nonDvFieldName = "number_p_i";
+    doTestIntPointFunctionQuery("number_p_i_dv", "number_p_i", "int");
+  }
+
+  private void doTestIntPointFunctionQuery(String dvFieldName, String nonDvFieldName, String type) throws Exception {
     for (int i = 0; i < 10; i++) {
       assertU(adoc("id", String.valueOf(i), dvFieldName, String.valueOf(i), nonDvFieldName, String.valueOf(i)));
     }
     assertU(commit());
     assertTrue(h.getCore().getLatestSchema().getField(dvFieldName).hasDocValues());
-    assertTrue(h.getCore().getLatestSchema().getField(dvFieldName).getType() instanceof IntPointField);
+    assertTrue(h.getCore().getLatestSchema().getField(dvFieldName).getType() instanceof PointField);
     assertQ(req("q", "*:*", "fl", "id, " + dvFieldName, "sort", "product(-1," + dvFieldName + ") asc"), 
         "//*[@numFound='10']",
-        "//result/doc[1]/int[@name='" + dvFieldName + "'][.='9']",
-        "//result/doc[2]/int[@name='" + dvFieldName + "'][.='8']",
-        "//result/doc[3]/int[@name='" + dvFieldName + "'][.='7']",
-        "//result/doc[10]/int[@name='" + dvFieldName + "'][.='0']");
+        "//result/doc[1]/" + type + "[@name='" + dvFieldName + "'][.='9']",
+        "//result/doc[2]/" + type + "[@name='" + dvFieldName + "'][.='8']",
+        "//result/doc[3]/" + type + "[@name='" + dvFieldName + "'][.='7']",
+        "//result/doc[10]/" + type + "[@name='" + dvFieldName + "'][.='0']");
     
     assertQ(req("q", "*:*", "fl", "id, " + dvFieldName + ", product(-1," + dvFieldName + ")"), 
         "//*[@numFound='10']",
@@ -294,13 +325,13 @@ public class TestPointFields extends SolrTestCaseJ4 {
     
     assertQ(req("q", "*:*", "fl", "id, " + dvFieldName + ", field(" + dvFieldName + ")"), 
         "//*[@numFound='10']",
-        "//result/doc[1]/int[@name='field(" + dvFieldName + ")'][.='0']",
-        "//result/doc[2]/int[@name='field(" + dvFieldName + ")'][.='1']",
-        "//result/doc[3]/int[@name='field(" + dvFieldName + ")'][.='2']",
-        "//result/doc[10]/int[@name='field(" + dvFieldName + ")'][.='9']");
+        "//result/doc[1]/" + type + "[@name='field(" + dvFieldName + ")'][.='0']",
+        "//result/doc[2]/" + type + "[@name='field(" + dvFieldName + ")'][.='1']",
+        "//result/doc[3]/" + type + "[@name='field(" + dvFieldName + ")'][.='2']",
+        "//result/doc[10]/" + type + "[@name='field(" + dvFieldName + ")'][.='9']");
     
     assertFalse(h.getCore().getLatestSchema().getField(nonDvFieldName).hasDocValues());
-    assertTrue(h.getCore().getLatestSchema().getField(nonDvFieldName).getType() instanceof IntPointField);
+    assertTrue(h.getCore().getLatestSchema().getField(nonDvFieldName).getType() instanceof PointField);
 
     assertQEx("Expecting Exception", 
         "sort param could not be parsed as a query", 
@@ -916,6 +947,29 @@ public class TestPointFields extends SolrTestCaseJ4 {
     }
     return stringArr;
   }
+  
+  private String[] getRandomStringArrayWithLongs(int length, boolean sorted) {
+    Set<Long> set;
+    if (sorted) {
+      set = new TreeSet<>();
+    } else {
+      set = new HashSet<>();
+    }
+    while (set.size() < length) {
+      long number = random().nextLong();
+      if (random().nextBoolean()) {
+        number = number * -1;
+      }
+      set.add(number);
+    }
+    String[] stringArr = new String[length];
+    int i = 0;
+    for (long val:set) {
+      stringArr[i] = String.valueOf(val);
+      i++;
+    }
+    return stringArr;
+  }
 
   @Test
   public void testDoublePointFieldRangeFacet() throws Exception {
@@ -1167,7 +1221,82 @@ public class TestPointFields extends SolrTestCaseJ4 {
     assertQ(req("q", "id:1"),
         "//result/doc[1]/double[@name='" + field + "'][.>'4.13']",
         "//result/doc[1]/double[@name='" + field + "'][.<'4.15']");
-    
   }
   
+  @Test
+  public void testLongPointFieldExactQuery() throws Exception {
+    doTestIntPointFieldExactQuery("number_p_l", true);
+    doTestIntPointFieldExactQuery("number_p_l_mv", true);
+    doTestIntPointFieldExactQuery("number_p_l_ni_dv", true);
+//    doTestIntPointFieldExactQuery("number_p_i_ni_mv_dv", true);
+  }
+  
+  @Test
+  public void testLongPointFieldReturn() throws Exception {
+    testPointFieldReturn("number_p_l", "long", new String[]{"0", "-1", "2", "3", "43", "52", "-60", "74", "80", "99", String.valueOf(Long.MAX_VALUE)});
+    clearIndex();
+    assertU(commit());
+    testPointFieldReturn("number_p_l_dv_ns", "long", new String[]{"0", "-1", "2", "3", "43", "52", "-60", "74", "80", "99", String.valueOf(Long.MAX_VALUE)});
+  }
+  
+  @Test
+  public void testLongPointFieldRangeQuery() throws Exception {
+    doTestIntPointFieldRangeQuery("number_p_l", "long", true);
+  }
+  
+  @Test
+  public void testLongPointFieldSort() throws Exception {
+    testPointFieldSort("number_p_l", "number_p_l_dv", new String[]{String.valueOf(Integer.MIN_VALUE), 
+        "1", "2", "3", "4", "5", "6", "7", 
+        String.valueOf(Integer.MAX_VALUE), String.valueOf(Long.MAX_VALUE)});
+  }
+  
+  @Test
+  public void testLongPointFieldFacetField() throws Exception {
+    testPointFieldFacetField("number_p_l", "number_p_l_dv", getSequentialStringArrayWithInts(10));
+    clearIndex();
+    assertU(commit());
+    testPointFieldFacetField("number_p_l", "number_p_l_dv", getRandomStringArrayWithLongs(10, true));
+  }
+  
+  @Test
+  public void testLongPointFieldRangeFacet() throws Exception {
+    doTestIntPointFieldRangeFacet("number_p_l_dv", "number_p_l");
+  }
+  
+  @Test
+  public void testLongPointFunctionQuery() throws Exception {
+    doTestIntPointFunctionQuery("number_p_l_dv", "number_p_l", "long");
+  }
+  
+  @Test
+  public void testLongPointStats() throws Exception {
+    testPointStats("number_p_l", "number_p_l_dv", new String[]{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"},
+        "0.0", "9.0", "10", "1");
+  }
+  
+  @Test
+  public void testLongPointFieldMultiValuedExactQuery() throws Exception {
+    testPointFieldMultiValuedExactQuery("number_p_l_mv", getSequentialStringArrayWithInts(20));
+  }
+  
+  @Test
+  public void testLongPointFieldMultiValuedReturn() throws Exception {
+    testPointFieldMultiValuedReturn("number_p_l_mv", "long", getSequentialStringArrayWithInts(20));
+  }
+  
+  @Test
+  public void testLongPointFieldMultiValuedRangeQuery() throws Exception {
+    testPointFieldMultiValuedRangeQuery("number_p_l_mv", "long", getSequentialStringArrayWithInts(20));
+  }
+  
+  @Test
+  public void testLongPointFieldsAtomicUpdates() throws Exception {
+    if (!Boolean.getBoolean("enable.update.log")) {
+      return;
+    }
+    testIntPointFieldsAtomicUpdates("number_p_l", "long");
+    testIntPointFieldsAtomicUpdates("number_p_l_dv", "long");
+    testIntPointFieldsAtomicUpdates("number_p_l_dv_ns", "long");
+  }
 }
