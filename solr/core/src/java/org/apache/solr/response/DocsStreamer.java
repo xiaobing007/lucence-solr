@@ -33,6 +33,7 @@ import org.apache.solr.schema.BinaryField;
 import org.apache.solr.schema.BoolField;
 import org.apache.solr.schema.DoublePointField;
 import org.apache.solr.schema.FieldType;
+import org.apache.solr.schema.FloatPointField;
 import org.apache.solr.schema.IndexSchema;
 import org.apache.solr.schema.IntPointField;
 import org.apache.solr.schema.LongPointField;
@@ -217,8 +218,9 @@ public class DocsStreamer implements Iterator<SolrDocument> {
     KNOWN_TYPES.add(TrieDateField.class);
     KNOWN_TYPES.add(BinaryField.class);
     KNOWN_TYPES.add(IntPointField.class);
-    KNOWN_TYPES.add(DoublePointField.class);
     KNOWN_TYPES.add(LongPointField.class);
+    KNOWN_TYPES.add(DoublePointField.class);
+    KNOWN_TYPES.add(FloatPointField.class);
     // We do not add UUIDField because UUID object is not a supported type in JavaBinCodec
     // and if we write UUIDField.toObject, we wouldn't know how to handle it in the client side
   }

@@ -22,6 +22,7 @@ import org.apache.solr.schema.IndexSchema;
 import org.apache.solr.schema.CustomAnalyzerStrField; // jdoc
 import org.apache.solr.util.AbstractSolrTestCase;
 import org.apache.solr.util.TestHarness;
+import org.apache.solr.SolrTestCaseJ4.SuppressPointFields;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,6 +33,7 @@ import java.util.EnumSet;
 /**
  * :TODO: currently only tests some of the utilities in the LukeRequestHandler
  */
+@SuppressPointFields
 public class LukeRequestHandlerTest extends AbstractSolrTestCase {
 
   @BeforeClass

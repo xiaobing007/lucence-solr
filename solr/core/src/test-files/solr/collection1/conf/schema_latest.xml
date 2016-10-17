@@ -215,7 +215,7 @@
   <dynamicField name="*_lds" type="long" indexed="true" stored="false" multiValued="true" docValues="true"/>
   <dynamicField name="*_f" type="float" indexed="true" stored="true"/>
   <dynamicField name="*_fs" type="float" indexed="true" stored="true" multiValued="true"/>
-  <dynamicField name="*_fd" type="float" indexed="true" stored="false" docValues="true"/>
+  <dynamicField name="*_fd" type="${solr.tests.floatClass:pfloat}" indexed="true" stored="false" docValues="true"/>
   <dynamicField name="*_fds" type="float" indexed="true" stored="false" multiValued="true" docValues="true"/>
   <dynamicField name="*_d" type="double" indexed="true" stored="true"/>
   <dynamicField name="*_ds" type="double" indexed="true" stored="true" multiValued="true"/>
@@ -233,7 +233,7 @@
   <dynamicField name="*_sdsS" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
   <dynamicField name="*_ldS" type="${solr.tests.longClass:plong}" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_ldsS" type="long" indexed="true" stored="true" multiValued="true" docValues="true"/>
-  <dynamicField name="*_fdS" type="float" indexed="true" stored="true" docValues="true"/>
+  <dynamicField name="*_fdS" type="${solr.tests.floatClass:pfloat}" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_fdsS" type="float" indexed="true" stored="true" multiValued="true" docValues="true"/>
   <dynamicField name="*_ddS" type="${solr.tests.doubleClass:pdouble}" indexed="true" stored="true" docValues="true"/>
   <dynamicField name="*_ddsS" type="double" indexed="true" stored="true" multiValued="true" docValues="true"/>
@@ -397,8 +397,9 @@
   
   <!-- Point Fields -->
   <fieldType name="pint" class="solr.IntPointField"/>
-  <fieldType name="pdouble" class="solr.DoublePointField"/>
   <fieldType name="plong" class="solr.LongPointField"/>
+  <fieldType name="pdouble" class="solr.DoublePointField"/>
+  <fieldType name="pfloat" class="solr.FloatPointField"/>
   
 
   <!-- The format for this date field is of the form 1995-12-31T23:59:59Z, and

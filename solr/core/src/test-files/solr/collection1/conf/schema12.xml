@@ -45,8 +45,9 @@
   
   <!-- Point Fields -->
   <fieldType name="pint" class="solr.IntPointField" docValues="true"/>
-  <fieldType name="pdouble" class="solr.DoublePointField" docValues="true"/>
   <fieldType name="plong" class="solr.LongPointField" docValues="true"/>
+  <fieldType name="pdouble" class="solr.DoublePointField" docValues="true"/>
+  <fieldType name="pfloat" class="solr.FloatPointField" docValues="true"/>
 
   <!-- Field type demonstrating an Analyzer failure -->
   <fieldType name="failtype1" class="solr.TextField">
@@ -437,7 +438,7 @@
   <field name="text" type="text" indexed="true" stored="false"/>
   <field name="subject" type="text" indexed="true" stored="true"/>
   <field name="title" type="nametext" indexed="true" stored="true"/>
-  <field name="weight" type="float" indexed="true" stored="true"/>
+  <field name="weight" type="${solr.tests.floatClass:pfloat}" indexed="true" stored="true"/>
   <field name="bday" type="date" indexed="true" stored="true"/>
 
   <field name="text_np" type="text_np" indexed="true" stored="false"/>
@@ -565,7 +566,7 @@
   <dynamicField name="*_t" type="text" indexed="true" stored="true"/>
   <dynamicField name="*_tt" type="text" indexed="true" stored="true"/>
   <dynamicField name="*_b" type="boolean" indexed="true" stored="true"/>
-  <dynamicField name="*_f" type="float" indexed="true" stored="true"/>
+  <dynamicField name="*_f" type="${solr.tests.floatClass:pfloat}" indexed="true" stored="true"/>
   <dynamicField name="*_d" type="double" indexed="true" stored="true"/>
   <dynamicField name="*_dt" type="date" indexed="true" stored="true"/>
 

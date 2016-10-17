@@ -57,8 +57,10 @@
     <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true" omitNorms="true"/>
 
     <fieldType name="pint" class="solr.IntPointField"/>
-    <fieldType name="pdouble" class="solr.DoublePointField"/>
     <fieldType name="plong" class="solr.LongPointField"/>
+    <fieldType name="pdouble" class="solr.DoublePointField"/>
+    <fieldType name="pfloat" class="solr.FloatPointField"/>
+    
     <fieldType name="int" class="solr.TrieIntField" precisionStep="0" omitNorms="true" positionIncrementGap="0"/>
     <fieldType name="float" class="solr.TrieFloatField" precisionStep="0" omitNorms="true" positionIncrementGap="0"/>
     <fieldType name="long" class="solr.TrieLongField" precisionStep="0" omitNorms="true" positionIncrementGap="0"/>
@@ -101,13 +103,6 @@
    <dynamicField name="*_p_i_ni_dv"  type="pint"    indexed="false"  stored="true" docValues="true"/>
    <dynamicField name="*_p_i_ni_mv_dv"  type="pint"    indexed="false"  stored="true" docValues="true" multiValued="true"/>
    
-   <dynamicField name="*_p_d"  type="pdouble"    indexed="true"  stored="true"/>
-   <dynamicField name="*_p_d_dv"  type="pdouble"    indexed="true"  stored="true" docValues="true"/>
-   <dynamicField name="*_p_d_mv"  type="pdouble"    indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="*_p_d_mv_dv"  type="pdouble"    indexed="true"  stored="true" docValues="true" multiValued="true"/>
-   <dynamicField name="*_p_d_ni_dv"  type="pdouble"    indexed="false"  stored="true" docValues="true"/>
-   <dynamicField name="*_p_d_ni_mv_dv"  type="pdouble"    indexed="false"  stored="true" docValues="true" multiValued="true"/>
-   
    <dynamicField name="*_p_l"  type="plong"    indexed="true"  stored="true"/>
    <dynamicField name="*_p_l_dv"  type="plong"    indexed="true"  stored="true" docValues="true"/>
    <dynamicField name="*_p_l_mv"  type="plong"    indexed="true"  stored="true" multiValued="true"/>
@@ -115,10 +110,25 @@
    <dynamicField name="*_p_l_ni_dv"  type="plong"    indexed="false"  stored="true" docValues="true"/>
    <dynamicField name="*_p_l_ni_mv_dv"  type="plong"    indexed="false"  stored="true" docValues="true" multiValued="true"/>
    
+   <dynamicField name="*_p_d"  type="pdouble"    indexed="true"  stored="true"/>
+   <dynamicField name="*_p_d_dv"  type="pdouble"    indexed="true"  stored="true" docValues="true"/>
+   <dynamicField name="*_p_d_mv"  type="pdouble"    indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_p_d_mv_dv"  type="pdouble"    indexed="true"  stored="true" docValues="true" multiValued="true"/>
+   <dynamicField name="*_p_d_ni_dv"  type="pdouble"    indexed="false"  stored="true" docValues="true"/>
+   <dynamicField name="*_p_d_ni_mv_dv"  type="pdouble"    indexed="false"  stored="true" docValues="true" multiValued="true"/>
+   
+   <dynamicField name="*_p_f"  type="pfloat"    indexed="true"  stored="true"/>
+   <dynamicField name="*_p_f_dv"  type="pfloat"    indexed="true"  stored="true" docValues="true"/>
+   <dynamicField name="*_p_f_mv"  type="pfloat"    indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_p_f_mv_dv"  type="pfloat"    indexed="true"  stored="true" docValues="true" multiValued="true"/>
+   <dynamicField name="*_p_f_ni_dv"  type="pfloat"    indexed="false"  stored="true" docValues="true"/>
+   <dynamicField name="*_p_f_ni_mv_dv"  type="pfloat"    indexed="false"  stored="true" docValues="true" multiValued="true"/>
+   
    <!-- return DV fields as  -->
    <dynamicField name="*_p_i_dv_ns"  type="pint"    indexed="true"  stored="false" docValues="true" useDocValuesAsStored="true"/>
-   <dynamicField name="*_p_d_dv_ns"  type="pdouble"    indexed="true"  stored="false" docValues="true" useDocValuesAsStored="true"/>
    <dynamicField name="*_p_l_dv_ns"  type="plong"    indexed="true"  stored="false" docValues="true" useDocValuesAsStored="true"/>
+   <dynamicField name="*_p_d_dv_ns"  type="pdouble"    indexed="true"  stored="false" docValues="true" useDocValuesAsStored="true"/>
+   <dynamicField name="*_p_f_dv_ns"  type="pfloat"    indexed="true"  stored="false" docValues="true" useDocValuesAsStored="true"/>
    
    <!--  dynamicField name="*_l"  type="plong"   indexed="true"  stored="true"/>
    <dynamicField name="*_f"  type="pfloat"  indexed="true"  stored="true"/>
