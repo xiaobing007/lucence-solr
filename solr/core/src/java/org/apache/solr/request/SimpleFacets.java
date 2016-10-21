@@ -582,6 +582,10 @@ public class SimpleFacets {
    static FacetMethod selectFacetMethod(SchemaField field, FacetMethod method, Integer mincount) {
 
      FieldType type = field.getType();
+     if (type.isPointField()) {
+       // Only FCS is supported for PointFields for now
+       return FacetMethod.FCS;
+     }
 
      /*The user did not specify any preference*/
      if (method == null) {
@@ -845,7 +849,7 @@ public class SimpleFacets {
   public NamedList<Integer> getFacetTermEnumCounts(SolrIndexSearcher searcher, DocSet docs, String field, int offset, int limit, int mincount, boolean missing, 
                                       String sort, String prefix, String contains, boolean ignoreCase, boolean intersectsCheck)
     throws IOException {
-
+    
     /* :TODO: potential optimization...
     * cache the Terms with the highest docFreq and try them first
     * don't enum if we get our max from them
@@ -861,10 +865,12 @@ public class SimpleFacets {
       fastForRandomSet = new HashDocSet(sset.getDocs(), 0, sset.size());
     }
 
-
     IndexSchema schema = searcher.getSchema();
-    LeafReader r = searcher.getSlowAtomicReader();
     FieldType ft = schema.getFieldType(field);
+    assert !ft.isPointField(): "Point Fields don't support enum method";
+    
+    LeafReader r = searcher.getSlowAtomicReader();
+    
 
     boolean sortByCount = sort.equals("count") || sort.equals("true");
     final int maxsize = limit>=0 ? offset+limit : Integer.MAX_VALUE-1;
