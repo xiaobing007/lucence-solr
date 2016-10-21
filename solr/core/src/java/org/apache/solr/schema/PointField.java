@@ -128,6 +128,8 @@ public abstract class PointField extends PrimitiveFieldType {
     return type;
   }
   
+  public abstract Query getSetQuery(SchemaField field, String[] externalVal);
+  
   @Override
   public Query getFieldQuery(QParser parser, SchemaField field, String externalVal) {
     if (!field.indexed() && field.hasDocValues()) {

@@ -69,6 +69,7 @@ public class IntPointField extends PointField implements IntValueFieldType {
     return super.toNativeType(val);
   }
 
+  @Override
   public Query getRangeQuery(QParser parser, SchemaField field, String min, String max, boolean minInclusive,
       boolean maxInclusive) {
     int actualMin, actualMax;
@@ -110,6 +111,16 @@ public class IntPointField extends PointField implements IntValueFieldType {
   protected Query getExactQuery(QParser parser, SchemaField field, String externalVal) {
     // TODO: better handling of string->int conversion
     return IntPoint.newExactQuery(field.getName(), Integer.parseInt(externalVal));
+  }
+  
+  @Override
+  public Query getSetQuery(SchemaField field, String[] externalVal) {
+    assert externalVal.length > 0;
+    int[] values = new int[externalVal.length];
+    for (int i = 0; i < externalVal.length; i++) {
+      values[i] = Integer.parseInt(externalVal[i]);
+    }
+    return IntPoint.newSetQuery(field.getName(), values);
   }
 
   @Override

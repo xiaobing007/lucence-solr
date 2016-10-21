@@ -100,6 +100,16 @@ public class LongPointField extends PointField implements LongValueFieldType {
   protected Query getExactQuery(QParser parser, SchemaField field, String externalVal) {
     return LongPoint.newExactQuery(field.getName(), Long.parseLong(externalVal));
   }
+  
+  @Override
+  public Query getSetQuery(SchemaField field, String[] externalVal) {
+    assert externalVal.length > 0;
+    long[] values = new long[externalVal.length];
+    for (int i = 0; i < externalVal.length; i++) {
+      values[i] = Long.parseLong(externalVal[i]);
+    }
+    return LongPoint.newSetQuery(field.getName(), values);
+  }
 
   @Override
   protected String indexedToReadable(BytesRef indexedForm) {

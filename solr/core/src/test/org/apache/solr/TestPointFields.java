@@ -244,6 +244,13 @@ public class TestPointFields extends SolrTestCaseJ4 {
     testIntPointFieldsAtomicUpdates("number_p_i_dv_ns", "int");
   }
   
+  @Test
+  public void testIntPointSetQuery() throws Exception {
+    doTestSetQueries("number_p_i", getRandomStringArrayWithInts(10, false), false);
+    doTestSetQueries("number_p_i_mv", getRandomStringArrayWithInts(10, false), true);
+    doTestSetQueries("number_p_i_ni_dv", getRandomStringArrayWithInts(10, false), false);
+  }
+  
   // DoublePointField
 
   @Test
@@ -458,6 +465,13 @@ public class TestPointFields extends SolrTestCaseJ4 {
         "//result/doc[1]/" + type + "[@name='" + field + "'][.<'4.15']");
   }
   
+  @Test
+  public void testDoublePointSetQuery() throws Exception {
+    doTestSetQueries("number_p_d", getRandomStringArrayWithDoubles(10, false), false);
+    doTestSetQueries("number_p_d_mv", getRandomStringArrayWithDoubles(10, false), true);
+    doTestSetQueries("number_p_d_ni_dv", getRandomStringArrayWithDoubles(10, false), false);
+  }
+  
   // Float
   
 
@@ -545,6 +559,14 @@ public class TestPointFields extends SolrTestCaseJ4 {
     doTestFloatPointFieldsAtomicUpdates("number_p_f_dv_ns", "float");
   }
   
+
+  @Test
+  public void testFloatPointSetQuery() throws Exception {
+    doTestSetQueries("number_p_f", getRandomStringArrayWithFloats(10, false), false);
+    doTestSetQueries("number_p_f_mv", getRandomStringArrayWithFloats(10, false), true);
+    doTestSetQueries("number_p_f_ni_dv", getRandomStringArrayWithFloats(10, false), false);
+  }
+  
   // Long
   
   @Test
@@ -622,6 +644,13 @@ public class TestPointFields extends SolrTestCaseJ4 {
     testIntPointFieldsAtomicUpdates("number_p_l", "long");
     testIntPointFieldsAtomicUpdates("number_p_l_dv", "long");
     testIntPointFieldsAtomicUpdates("number_p_l_dv_ns", "long");
+  }
+  
+  @Test
+  public void testLongPointSetQuery() throws Exception {
+    doTestSetQueries("number_p_l", getRandomStringArrayWithLongs(10, false), false);
+    doTestSetQueries("number_p_l_mv", getRandomStringArrayWithLongs(10, false), true);
+    doTestSetQueries("number_p_l_ni_dv", getRandomStringArrayWithLongs(10, false), false);
   }
   
   // Helper methods
@@ -867,12 +896,6 @@ public class TestPointFields extends SolrTestCaseJ4 {
     }
     assertU(commit());
     assertQ(req("q", "*:*", "fl", "id, " + docValuesField, "facet", "true", "facet.field", docValuesField), 
-        "//*[@numFound='10']",
-        "//lst[@name='facet_counts']/lst[@name='facet_fields']/lst[@name='" + docValuesField +"']/int[@name='" + numbers[1] + "'][.='1']",
-        "//lst[@name='facet_counts']/lst[@name='facet_fields']/lst[@name='" + docValuesField +"']/int[@name='" + numbers[2] + "'][.='1']",
-        "//lst[@name='facet_counts']/lst[@name='facet_fields']/lst[@name='" + docValuesField +"']/int[@name='" + numbers[3] + "'][.='1']");
-    
-    assertQ(req("q", "*:*", "fl", "id, " + docValuesField, "facet", "true", "facet.field", docValuesField, "facet.method", "enum"), 
         "//*[@numFound='10']",
         "//lst[@name='facet_counts']/lst[@name='facet_fields']/lst[@name='" + docValuesField +"']/int[@name='" + numbers[1] + "'][.='1']",
         "//lst[@name='facet_counts']/lst[@name='facet_fields']/lst[@name='" + docValuesField +"']/int[@name='" + numbers[2] + "'][.='1']",
@@ -1432,5 +1455,41 @@ public class TestPointFields extends SolrTestCaseJ4 {
         "sort param could not be parsed as a query", 
         req("q", "*:*", "fl", "id, " + nonDvFieldName, "sort", "product(-1," + nonDvFieldName + ") asc"), 
         SolrException.ErrorCode.BAD_REQUEST);
+  }
+  
+  private void doTestSetQueries(String fieldName, String[] values, boolean multiValued) {
+    for (int i = 0; i < values.length; i++) {
+      assertU(adoc("id", String.valueOf(i), fieldName, values[i]));
+    }
+    assertU(commit());
+    assertTrue(h.getCore().getLatestSchema().getField(fieldName).getType() instanceof PointField);
+    
+    for (int i = 0; i < values.length; i++) {
+      assertQ(req("q", "{!term f='" + fieldName + "'}" + values[i], "fl", "id," + fieldName), 
+          "//*[@numFound='1']");
+    }
+    
+    for (int i = 0; i < values.length; i++) {
+      assertQ(req("q", "{!terms f='" + fieldName + "'}" + values[i] + "," + values[(i + 1)%values.length], "fl", "id," + fieldName), 
+          "//*[@numFound='2']");
+    }
+    
+    if (multiValued) {
+      clearIndex();
+      assertU(commit());
+      for (int i = 0; i < values.length; i++) {
+        assertU(adoc("id", String.valueOf(i), fieldName, values[i], fieldName, values[(i+1)%values.length]));
+      }
+      assertU(commit());
+      for (int i = 0; i < values.length; i++) {
+        assertQ(req("q", "{!term f='" + fieldName + "'}" + values[i], "fl", "id," + fieldName), 
+            "//*[@numFound='2']");
+      }
+      
+      for (int i = 0; i < values.length; i++) {
+        assertQ(req("q", "{!terms f='" + fieldName + "'}" + values[i] + "," + values[(i + 1)%values.length], "fl", "id," + fieldName), 
+            "//*[@numFound='3']");
+      }
+    }
   }
 }

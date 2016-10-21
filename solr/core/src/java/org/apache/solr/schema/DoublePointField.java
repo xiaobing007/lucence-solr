@@ -101,6 +101,16 @@ public class DoublePointField extends PointField implements DoubleValueFieldType
     // TODO: better handling of string->int conversion
     return DoublePoint.newExactQuery(field.getName(), Double.parseDouble(externalVal));
   }
+  
+  @Override
+  public Query getSetQuery(SchemaField field, String[] externalVal) {
+    assert externalVal.length > 0;
+    double[] values = new double[externalVal.length];
+    for (int i = 0; i < externalVal.length; i++) {
+      values[i] = Double.parseDouble(externalVal[i]);
+    }
+    return DoublePoint.newSetQuery(field.getName(), values);
+  }
 
   @Override
   protected String indexedToReadable(BytesRef indexedForm) {
