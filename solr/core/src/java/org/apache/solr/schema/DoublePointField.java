@@ -97,7 +97,7 @@ public class DoublePointField extends PointField implements DoubleValueFieldType
   }
 
   @Override
-  protected Query getExactQuery(QParser parser, SchemaField field, String externalVal) {
+  public Query getExactQuery(SchemaField field, String externalVal) {
     // TODO: better handling of string->int conversion
     return DoublePoint.newExactQuery(field.getName(), Double.parseDouble(externalVal));
   }

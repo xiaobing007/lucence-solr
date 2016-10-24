@@ -69,6 +69,7 @@ import org.apache.solr.response.ResultContext;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.schema.FieldType;
 import org.apache.solr.schema.IndexSchema;
+import org.apache.solr.schema.PointField;
 import org.apache.solr.schema.SchemaField;
 import org.apache.solr.search.CursorMark;
 import org.apache.solr.search.DocIterator;
@@ -337,11 +338,21 @@ public class QueryComponent extends SearchComponent
       List<String> idArr = StrUtils.splitSmart(ids, ",", true);
       int[] luceneIds = new int[idArr.size()];
       int docs = 0;
-      for (int i=0; i<idArr.size(); i++) {
-        int id = searcher.getFirstMatch(
-                new Term(idField.getName(), idField.getType().toInternal(idArr.get(i))));
-        if (id >= 0)
-          luceneIds[docs++] = id;
+      if (idField.getType().isPointField()) {
+        for (int i=0; i<idArr.size(); i++) {
+          int id = searcher.search(
+              ((PointField)idField.getType()).getExactQuery(idField, idArr.get(i)), 1).scoreDocs[0].doc;
+          if (id >= 0) {
+            luceneIds[docs++] = id;
+          }
+        }
+      } else {
+        for (int i=0; i<idArr.size(); i++) {
+          int id = searcher.getFirstMatch(
+                  new Term(idField.getName(), idField.getType().toInternal(idArr.get(i))));
+          if (id >= 0)
+            luceneIds[docs++] = id;
+        }
       }
 
       DocListAndSet res = new DocListAndSet();

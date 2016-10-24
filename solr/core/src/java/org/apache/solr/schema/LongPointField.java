@@ -97,7 +97,7 @@ public class LongPointField extends PointField implements LongValueFieldType {
   }
 
   @Override
-  protected Query getExactQuery(QParser parser, SchemaField field, String externalVal) {
+  public Query getExactQuery(SchemaField field, String externalVal) {
     return LongPoint.newExactQuery(field.getName(), Long.parseLong(externalVal));
   }
   

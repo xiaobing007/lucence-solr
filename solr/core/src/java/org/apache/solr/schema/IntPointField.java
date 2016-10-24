@@ -108,7 +108,7 @@ public class IntPointField extends PointField implements IntValueFieldType {
   }
 
   @Override
-  protected Query getExactQuery(QParser parser, SchemaField field, String externalVal) {
+  public Query getExactQuery(SchemaField field, String externalVal) {
     // TODO: better handling of string->int conversion
     return IntPoint.newExactQuery(field.getName(), Integer.parseInt(externalVal));
   }

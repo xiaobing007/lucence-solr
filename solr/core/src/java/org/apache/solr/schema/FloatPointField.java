@@ -97,7 +97,7 @@ public class FloatPointField extends PointField implements FloatValueFieldType {
   }
 
   @Override
-  protected Query getExactQuery(QParser parser, SchemaField field, String externalVal) {
+  public Query getExactQuery(SchemaField field, String externalVal) {
     return FloatPoint.newExactQuery(field.getName(), Float.parseFloat(externalVal));
   }
   

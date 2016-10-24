@@ -136,11 +136,11 @@ public abstract class PointField extends PrimitiveFieldType {
       // currently implemented as singleton range
       return getRangeQuery(parser, field, externalVal, externalVal, true, true);
     } else {
-      return getExactQuery(parser, field, externalVal);
+      return getExactQuery(field, externalVal);
     }
   }
 
-  protected abstract Query getExactQuery(QParser parser, SchemaField field, String externalVal);
+  public abstract Query getExactQuery(SchemaField field, String externalVal);
 
   @Override
   public String storedToReadable(IndexableField f) {
@@ -149,7 +149,7 @@ public abstract class PointField extends PrimitiveFieldType {
 
   @Override
   public String toInternal(String val) {
-    return toInternalByteRef(val).utf8ToString();
+    throw new UnsupportedOperationException("Can't generate internal string in PointField. use PointField.toInternalByteRef");
   }
   
   public BytesRef toInternalByteRef(String val) {
