@@ -73,6 +73,7 @@ import org.apache.solr.request.IntervalFacets.FacetInterval;
 import org.apache.solr.schema.BoolField;
 import org.apache.solr.schema.FieldType;
 import org.apache.solr.schema.IndexSchema;
+import org.apache.solr.schema.PointField;
 import org.apache.solr.schema.SchemaField;
 import org.apache.solr.schema.TrieField;
 import org.apache.solr.search.BitDocSet;
@@ -811,12 +812,20 @@ public class SimpleFacets {
    * @param terms a list of term values (in the specified field) to compute the counts for 
    */
   protected NamedList<Integer> getListedTermCounts(String field, final ParsedParams parsed, List<String> terms) throws IOException {
-    FieldType ft = searcher.getSchema().getFieldType(field);
+    SchemaField sf = searcher.getSchema().getField(field);
+    FieldType ft = sf.getType();
     NamedList<Integer> res = new NamedList<>();
-    for (String term : terms) {
-      String internal = ft.toInternal(term);
-      int count = searcher.numDocs(new TermQuery(new Term(field, internal)), parsed.docs);
-      res.add(term, count);
+    if (ft.isPointField()) {
+      for (String term : terms) {
+        int count = searcher.numDocs(((PointField)ft).getExactQuery(sf, term), parsed.docs);
+        res.add(term, count);
+      }
+    } else {
+      for (String term : terms) {
+        String internal = ft.toInternal(term);
+        int count = searcher.numDocs(new TermQuery(new Term(field, internal)), parsed.docs);
+        res.add(term, count);
+      }
     }
     return res;    
   }
